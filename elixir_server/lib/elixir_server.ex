@@ -6,7 +6,8 @@ defmodule ElixirServer.Router do
   plug(:dispatch)
 
   @carid   "id"
-  @value   "lat"
+  @lat     "lat"
+  @lon     "lon"
 
   def init(options) do
     Application.put_env(App, :pid_data, options, [])
@@ -18,9 +19,9 @@ defmodule ElixirServer.Router do
 
   def save(conn) do    
     conn = fetch_query_params(conn, []) # populates conn.params
-    %{ @carid => id, @value => lat } = conn.params
+    %{ @carid => id, @lat => lat, @lon => lon } = conn.params
     pid = Application.get_env(App, :pid_data, nil) 
-    send(pid, {:save, id, lat})
+    send(pid, {:save, id, { lat, lon }})
     send_resp(conn, 200, "save\n")
   end
 	
@@ -30,7 +31,7 @@ defmodule ElixirServer.Router do
     pid = Application.get_env(App, :pid_data, nil) 
     send(pid, {:get, id, self()})
     receive do
-       {:value, value} -> send_resp(conn, 200, value)
+       {:value, value} -> send_resp(conn, 200, elem(value, 0) <> "," <> elem(value, 1))
     end
   end
 
